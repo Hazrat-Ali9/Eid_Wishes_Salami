@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Eid Mubarak — Wishes & Salami</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Noto+Naskh+Arabic:wght@400;700&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div id="setup-page" style="display:none;flex-direction:column">
+  <div class="setup-wrap">
+    <p class="bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
+    <h1 class="eid-title" style="font-size:clamp(2.4rem,7vw,4.5rem);margin-bottom:10px">Eid Mubarak 🌙</h1>
+    <p class="setup-subtitle">Create your own Eid Wishes Wall — share it with everyone and collect your Salami!</p>
+    <div class="setup-card">
+      <div class="setup-step-label">Your Details</div>
+      <div class="field">
+        <label class="field-label" for="setup-name">Your Name</label>
+        <input type="text" id="setup-name" class="field-input" placeholder="e.g. Karim" maxlength="40" autocomplete="off"/>
+      </div>
+      <div class="field">
+        <label class="field-label" for="setup-bkash">Your bKash Number</label>
+        <input type="tel" id="setup-bkash" class="field-input" placeholder="e.g. 01712345678" maxlength="15"/>
+      </div>
+      <div class="field">
+        <label class="field-label" for="setup-nagad">Your Nagad Number</label>
+        <input type="tel" id="setup-nagad" class="field-input" placeholder="e.g. 01712345678" maxlength="15"/>
+      </div>
+      <button class="btn-primary btn-gold" onclick="createWall()">🌙 Create My Eid Wall</button>
+      <p class="field-error" id="setup-error"></p>
+      <p class="setup-note">A unique link will be created — share it with everyone!</p>
+    </div>
+    <div class="setup-how">
+      <div class="setup-how-step"><span class="how-num">1</span><span>Fill in your name and payment numbers</span></div>
+      <div class="setup-how-step"><span class="how-num">2</span><span>Get your unique shareable link</span></div>
+      <div class="setup-how-step"><span class="how-num">3</span><span>Share with friends — they wish you and send Salami!</span></div>
+    </div>
+  </div>
+</div>
+
+<canvas id="stars-canvas"></canvas>
+
+<div class="moon-container" aria-hidden="true">
+    <div class="moon-glow"></div>
+    <svg width="78" height="78" viewBox="0 0 78 78" fill="none">
+        <defs>
+            <filter id="mglow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            <radialGradient id="moonGrad" cx="38%" cy="35%">
+                <stop offset="0%" stop-color="#fff9e0"/>
+                <stop offset="45%" stop-color="#f5d87e"/>
+                <stop offset="100%" stop-color="#c8941a"/>
+            </radialGradient>
+        </defs>
+        <circle cx="39" cy="39" r="34" fill="url(#moonGrad)" filter="url(#mglow)"/>
+        <circle cx="53" cy="31" r="30" fill="#06061a"/>
+    </svg>
+</div>
+
+<div id="particles" aria-hidden="true"></div>
+
+<nav class="sticky-nav" id="sticky-nav">
+    <a href="#wishes-section" class="nav-link">🌙 Wishes</a>
+    <a href="#salami-section" class="nav-link">💰 Send Salami</a>
+    <a href="#board-section" class="nav-link">🏆 Leaderboard</a>
+</nav>
+
+<header class="site-header">
+    <p class="bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
+    <h1 class="eid-title">Eid Mubarak</h1>
+    <p class="eid-arabic">عيد مبارك • Eid Mubarak • ঈদ মোবারক</p>
+    <p class="eid-tagline">Share your blessings — send your Eid Salami 🌙</p>
+    <div class="divider" aria-hidden="true">
+        <span class="divider-line"></span>
+        <span class="divider-gem">✦</span>
+        <span class="divider-line"></span>
+    </div>
+    <div class="counters-row">
+        <div class="counter-pill">
+            <span class="counter-dot"></span>
+            <span id="wish-count-text">Loading wishes…</span>
+        </div>
+        <div class="counter-pill counter-pill--gold">
+            <span class="counter-dot counter-dot--gold"></span>
+            <span id="salami-total-text">Loading Salami…</span>
+        </div>
+    </div>
+</header>
+
+<div class="creator-message-wrap">
+    <div class="creator-message-card">
+        <div class="creator-badge">🌙 From the Creator</div>
+        <p class="creator-text">
+            "Eid Mubarak to every single person visiting this page — whether you are family, a friend, a stranger, or someone who found this by chance. May Allah fill your home with laughter, your heart with peace, and your table with the best biryani. This little corner of the internet was made with love & joy , from Chuadanga, Bangladesh. Share your wish, send your salami, and let's celebrate Eid together. 🕌✨"
+        </p>
+        <div class="creator-footer">
+            <div class="creator-avatar">ر</div>
+            <div class="creator-info">
+                <span class="creator-name">Hazrat Ali</span>
+                <span class="creator-role">{ 🚁 Researcher | 💻 Programmer | 🚀 Entrepreneur | 🛸Businessman } </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="section" id="wishes-section">
+  <div class="section-header">
+    <h2 class="section-title">🕌 Leave Your Eid Wish</h2>
+    <p class="section-sub">Your message appears on the community wall below in real time</p>
+  </div>
+  <div class="form-card" style="max-width:560px;margin:0 auto">
+    <div class="field">
+      <label class="field-label" for="w-name">Your Name</label>
+      <input type="text" id="w-name" class="field-input" placeholder="e.g. Hazrat Ali" maxlength="50" autocomplete="off"/>
+    </div>
+    <div class="field">
+      <label class="field-label" for="w-msg">Your Eid Wish</label>
+      <textarea id="w-msg" class="field-input field-textarea" placeholder="Write your Eid wish here…" maxlength="280"></textarea>
+      <div class="char-row" id="w-char">0 / 280</div>
+    </div>
+    <button class="btn-primary" id="w-btn" onclick="handleWishSubmit()">🌙 Share Eid Wish</button>
+    <p class="field-error" id="w-error"></p>
+  </div>
+</section>
+
+<section class="section" id="wall-section">
+  <div class="section-header">
+    <h2 class="section-title">🏮 Community Wishes Wall</h2>
+    <p class="section-sub">Wishes from around the world — updating live</p>
+  </div>
+  <div class="wishes-grid" id="wishes-grid">
+    <div class="grid-loading" id="wishes-loader">
+      <div class="dot-spinner"><span></span><span></span><span></span></div>
+      <p>Loading Wishes…</p>
+    </div>
+  </div>
+</section>
+
+<div class="salami-divider" aria-hidden="true">
+  <div class="salami-divider-line"></div>
+  <span class="salami-divider-text">✦ Eid Salami ✦</span>
+  <div class="salami-divider-line"></div>
+</div>
+
+<section class="section" id="salami-section">
+  <div class="section-header">
+    <h2 class="section-title">💰 Send Eid Salami</h2>
+    <p class="section-sub">Enter amount → tap your app → pay → come back and confirm!</p>
+  </div>
+
+  <div class="salami-step-card" id="step1-card">
+    <div class="step-badge">Step 1</div>
+    <p class="step-title">How much Salami do you want to send?</p>
+    <div class="amount-input-row">
+      <span class="taka-sign">৳</span>
+      <input type="number" id="quick-amount" class="amount-big-input" placeholder="500" min="10" max="50000"/>
+    </div>
+    <div class="quick-amounts">
+      <button class="quick-btn" onclick="setAmount(50)">৳ 50</button>
+      <button class="quick-btn" onclick="setAmount(100)">৳ 100</button>
+      <button class="quick-btn" onclick="setAmount(200)">৳ 200</button>
+      <button class="quick-btn" onclick="setAmount(500)">৳ 500</button>
+      <button class="quick-btn" onclick="setAmount(1000)">৳ 1000</button>
+    </div>
+    <p class="step-hint">Enter an amount then tap your payment app below 👇</p>
+  </div>
+
+  <div class="app-launch-row">
+    <button class="app-launch-btn bkash-launch" onclick="openPayApp('bKash')">
+      <div class="app-launch-logo">B</div>
+      <div class="app-launch-text">
+        <span class="app-launch-brand">bKash</span>
+        <span class="app-launch-sub">Tap to open app</span>
+      </div>
+      <span class="app-launch-arrow">→</span>
+    </button>
+    <button class="app-launch-btn nagad-launch" onclick="openPayApp('Nagad')">
+      <div class="app-launch-logo">N</div>
+      <div class="app-launch-text">
+        <span class="app-launch-brand">Nagad</span>
+        <span class="app-launch-sub">Tap to open app</span>
+      </div>
+      <span class="app-launch-arrow">→</span>
+    </button>
+  </div>
+
+  <div class="manual-copy-row">
+    <p class="manual-copy-label">Or copy number manually:</p>
+    <div class="manual-copy-btns">
+      <button class="copy-pill bkash-pill" onclick="copyNumber(BKASH_NUMBER,'bKash')">
+        <span>bKash</span>
+        <span id="bkash-num" class="copy-num">—</span>
+        <span id="bkash-hint" class="copy-icon">📋</span>
+      </button>
+      <button class="copy-pill nagad-pill" onclick="copyNumber(NAGAD_NUMBER,'Nagad')">
+        <span>Nagad</span>
+        <span id="nagad-num" class="copy-num">—</span>
+        <span id="nagad-hint" class="copy-icon">📋</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="salami-confirm-wrap">
+    <div class="step-badge">Step 2 — Confirm after payment</div>
+    <div class="form-card salami-form-card">
+      <p class="form-label-top">✅ Already sent? Confirm here!</p>
+      <div class="field">
+        <label class="field-label" for="s-name">Your Name</label>
+        <input type="text" id="s-name" class="field-input" placeholder="e.g. Hazrat Ali" maxlength="50" autocomplete="off"/>
+      </div>
+      <div class="field">
+        <label class="field-label" for="s-amount">Amount Sent (৳)</label>
+        <input type="number" id="s-amount" class="field-input" placeholder="e.g. 500" min="10" max="50000"/>
+      </div>
+      <div class="field">
+        <label class="field-label" for="s-method">Payment Method</label>
+        <select id="s-method" class="field-input field-select">
+          <option value="bKash">bKash</option>
+          <option value="Nagad">Nagad</option>
+          <option value="Cash">Cash (in person)</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <button class="btn-primary btn-gold" id="s-btn" onclick="handleSalamiSubmit()">🎊 Confirm Salami Sent</button>
+      <p class="field-error" id="s-error"></p>
+      <p class="honor-note"> your name goes public on the leaderboard!</p>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="board-section">
+  <div class="section-header">
+    <h2 class="section-title">🏆 Salami Leaderboard</h2>
+    <p class="section-sub">Top Eid Salami senders — real time</p>
+  </div>
+  <div class="board-stats">
+    <div class="board-stat">
+      <div class="board-stat-num" id="stat-total">৳ —</div>
+      <div class="board-stat-lbl">Total collected</div>
+    </div>
+    <div class="board-stat">
+      <div class="board-stat-num" id="stat-avg">৳ —</div>
+      <div class="board-stat-lbl">Average salami</div>
+    </div>
+    <div class="board-stat">
+      <div class="board-stat-num" id="stat-count">—</div>
+      <div class="board-stat-lbl">Senders</div>
+    </div>
+  </div>
+  <div class="tier-legend">
+    <span class="tier-pill tier-gold">🥇 Gold ৳500+</span>
+    <span class="tier-pill tier-silver">🥈 Silver ৳200+</span>
+    <span class="tier-pill tier-bronze">🥉 Bronze ৳50+</span>
+  </div>
+  <div class="leaderboard-wrap">
+    <div class="leaderboard" id="leaderboard">
+      <div class="grid-loading">
+        <div class="dot-spinner"><span></span><span></span><span></span></div>
+        <p>Loading leaderboard…</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+    <div class="mosque-wrap" aria-hidden="true">
+        <svg viewBox="0 0 1440 210" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax slice">
+            <defs><linearGradient id="mgd" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0d0d30"/><stop offset="100%" stop-color="#06061a"/></linearGradient></defs>
+            <rect x="0" y="178" width="1440" height="32" fill="url(#mgd)"/>
+            <path d="M0,178 Q180,148 360,178 L0,210 Z" fill="url(#mgd)"/>
+            <path d="M320,178 L320,138 Q430,106 540,130 L540,178 Z" fill="url(#mgd)"/>
+            <rect x="408" y="12" width="22" height="196" fill="url(#mgd)" rx="3"/>
+            <ellipse cx="419" cy="12" rx="13" ry="22" fill="url(#mgd)"/>
+            <ellipse cx="419" cy="-6" rx="5" ry="7" fill="url(#mgd)"/>
+            <rect x="404" y="74" width="30" height="6" fill="url(#mgd)" rx="3"/>
+            <path d="M413,97 L413,80 Q419,72 425,80 L425,97 Z" fill="#06061a"/>
+            <path d="M413,127 L413,110 Q419,102 425,110 L425,127 Z" fill="#06061a"/>
+            <rect x="530" y="136" width="380" height="74" fill="url(#mgd)"/>
+            <path d="M530,136 Q530,30 720,14 Q910,30 910,136 Z" fill="url(#mgd)"/>
+            <rect x="717" y="11" width="6" height="22" fill="url(#mgd)"/>
+            <path d="M713,14 Q720,2 727,14 Q724,18 720,16 Q716,18 713,14 Z" fill="url(#mgd)"/>
+            <path d="M699,210 L699,160 Q720,136 741,160 L741,210 Z" fill="#04041a"/>
+            <path d="M556,174 L556,150 Q566,137 576,150 L576,174 Z" fill="#04041a"/>
+            <path d="M588,172 L588,148 Q598,136 608,148 L608,172 Z" fill="#04041a"/>
+            <path d="M832,172 L832,148 Q842,136 852,148 L852,172 Z" fill="#04041a"/>
+            <path d="M864,174 L864,150 Q874,137 884,150 L884,174 Z" fill="#04041a"/>
+            <ellipse cx="660" cy="88" rx="14" ry="9" fill="#04041a"/>
+            <ellipse cx="720" cy="68" rx="14" ry="9" fill="#04041a"/>
+            <ellipse cx="780" cy="88" rx="14" ry="9" fill="#04041a"/>
+            <path d="M900,130 L900,178 L1120,178 L1120,138 Q1010,106 900,130 Z" fill="url(#mgd)"/>
+            <rect x="1010" y="12" width="22" height="196" fill="url(#mgd)" rx="3"/>
+            <ellipse cx="1021" cy="12" rx="13" ry="22" fill="url(#mgd)"/>
+            <ellipse cx="1021" cy="-6" rx="5" ry="7" fill="url(#mgd)"/>
+            <rect x="1006" y="74" width="30" height="6" fill="url(#mgd)" rx="3"/>
+            <path d="M1015,97 L1015,80 Q1021,72 1027,80 L1027,97 Z" fill="#06061a"/>
+            <path d="M1015,127 L1015,110 Q1021,102 1027,110 L1027,127 Z" fill="#06061a"/>
+            <path d="M1080,178 Q1260,148 1440,178 L1440,210 L1080,210 Z" fill="url(#mgd)"/>
+        </svg>
+        <p class="footer-credit">Eid Wishes Wall · Made with ❤️ by Hazrat Ali </p>
+        <div class="create-own-wrap">
+            <p class="create-own-label">Want your own Eid Wishes Wall?</p>
+            <button class="btn-primary create-own-btn" onclick="document.getElementById('setup-page').style.display='flex';window.scrollTo(0,0)">🌙 Create My Own Wall — Free</button>
+        </div>
+    </div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL  = 'https://oxazgybmsvksmnxuhyzb.supabase.co';
+const SUPABASE_ANON = 'sb_publishable_G_goKsPSWFLb50TKkD-bvg_ZixUZ_bv';
+
+let BKASH_NUMBER = '01581610293';
+let NAGAD_NUMBER = '01581610293';
+let HOST_ID      = 'default';
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+const THEMES = ['gold','emerald','purple','crimson','teal','rose'];
+const ICONS  = { gold:'🌙', emerald:'🕌', purple:'✨', crimson:'🌸', teal:'⭐', rose:'🌺' };
+
+function slugify(str) {
+  return str.toLowerCase().trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .substring(0, 30);
+}
+
+function createWall() {
+  const name  = document.getElementById('setup-name').value.trim();
+  const bkash = document.getElementById('setup-bkash').value.trim();
+  const nagad = document.getElementById('setup-nagad').value.trim();
+  if (!name)             return setErr('setup-error', 'Please enter your name.');
+  if (!bkash)            return setErr('setup-error', 'Please enter your bKash number.');
+  if (!nagad)            return setErr('setup-error', 'Please enter your Nagad number.');
+  if (bkash.length < 11) return setErr('setup-error', 'bKash number seems too short.');
+  if (nagad.length < 11) return setErr('setup-error', 'Nagad number seems too short.');
+  const slug = slugify(name);
+  if (!slug) return setErr('setup-error', 'Name must contain letters.');
+  const base   = window.location.origin + window.location.pathname;
+  const params = new URLSearchParams({ h: slug, name: name, b: bkash, n: nagad });
+  const link   = base + '?' + params.toString();
+  navigator.clipboard.writeText(link).catch(() => {});
+  window.location.href = link;
+}
+
+function timeAgo(ts) {
+  const d = Date.now() - ts;
+  if (d < 60000)    return 'just now';
+  if (d < 3600000)  return Math.floor(d / 60000) + 'm ago';
+  if (d < 86400000) return Math.floor(d / 3600000) + 'h ago';
+  return Math.floor(d / 86400000) + 'd ago';
+}
+
+function safe(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('visible');
+  setTimeout(() => t.classList.remove('visible'), 3400);
+}
+
+function boom() {
+  if (typeof confetti !== 'function') return;
+  const c = ['#f0c040','#2ecc71','#9b59b6','#e74c3c','#1abc9c'];
+  confetti({ particleCount: 100, spread: 70, origin: { y: 0.55 }, colors: c });
+  setTimeout(() => confetti({ particleCount: 55, spread: 90, origin: { y: 0.4 }, colors: c }), 380);
+}
+
+function setErr(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = msg;
+  if (msg) setTimeout(() => { el.textContent = ''; }, 3500);
+}
+
+function initStars() {
+  const c = document.getElementById('stars-canvas');
+  const x = c.getContext('2d');
+  let stars = [], t = 0;
+  function resize() {
+    c.width  = window.innerWidth;
+    c.height = window.innerHeight;
+    stars = Array.from({ length: 220 }, () => ({
+      x: Math.random() * c.width,
+      y: Math.random() * c.height,
+      r: Math.random() * 1.4 + 0.25,
+      b: Math.random() * 0.7 + 0.2,
+      s: Math.random() * 0.018 + 0.004,
+      p: Math.random() * Math.PI * 2
+    }));
+  }
+  function draw() {
+    x.clearRect(0, 0, c.width, c.height);
+    t += 0.016;
+    stars.forEach(s => {
+      const a = s.b * (0.5 + 0.5 * Math.sin(t * s.s * 60 + s.p));
+      x.beginPath();
+      x.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      x.fillStyle = 'rgba(255,252,230,' + a + ')';
+      x.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  resize();
+  draw();
+  window.addEventListener('resize', resize, { passive: true });
+}
+
+const EM = ['🏮','🌙','✨','⭐','🕌','🌸','🌿'];
+function spawn() {
+  const e = document.createElement('span');
+  e.className = 'particle';
+  e.textContent = EM[Math.floor(Math.random() * EM.length)];
+  e.style.cssText =
+    'left:' + (Math.random() * 100) + 'vw;' +
+    'font-size:' + (0.8 + Math.random() * 1.1) + 'rem;' +
+    'animation-duration:' + (16 + Math.random() * 20) + 's;' +
+    'animation-delay:' + (Math.random() * 4) + 's';
+  document.getElementById('particles').appendChild(e);
+  setTimeout(() => e.remove(), 44000);
+}
+
+function setAmount(n) {
+  document.getElementById('quick-amount').value = n;
+  document.getElementById('s-amount').value = n;
+  document.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('quick-btn--active'));
+  event.target.classList.add('quick-btn--active');
+}
+
+function openPayApp(brand) {
+  const amountEl = document.getElementById('quick-amount');
+  const amount   = parseInt(amountEl.value, 10);
+  if (!amount || isNaN(amount) || amount < 10) {
+    amountEl.focus();
+    amountEl.style.borderColor = 'rgba(231,76,60,.7)';
+    setTimeout(() => { amountEl.style.borderColor = ''; }, 2000);
+    showToast('Please enter an amount first!');
+    return;
+  }
+  document.getElementById('s-amount').value = amount;
+  document.getElementById('s-method').value = brand;
+  const num       = brand === 'bKash' ? BKASH_NUMBER : NAGAD_NUMBER;
+  const isAndroid = /android/i.test(navigator.userAgent);
+  let deepLink;
+  if (brand === 'bKash') {
+    deepLink = isAndroid
+      ? 'intent://send?to=' + num + '&amount=' + amount + '#Intent;scheme=bkash;package=com.bKash.customerapp;end'
+      : 'bkash://send?to=' + num + '&amount=' + amount;
+  } else {
+    deepLink = 'nagad://send?to=' + num + '&amount=' + amount;
+  }
+  window.location.href = deepLink;
+  setTimeout(() => {
+    if (!document.hidden) {
+      copyNumber(num, brand);
+      showToast('App not found — number copied!');
+    }
+  }, 1800);
+  showToast('Opening ' + brand + ' app… ৳' + amount);
+}
+
+function copyNumber(num, brand) {
+  const hintId = brand === 'bKash' ? 'bkash-hint' : 'nagad-hint';
+  const hint   = document.getElementById(hintId);
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(num).then(() => {
+      hint.textContent = '✅ Copied!';
+      setTimeout(() => { hint.textContent = '📋'; }, 2500);
+      showToast('📋 ' + brand + ' number copied!');
+    });
+  } else {
+    showToast(brand + ': ' + num);
+  }
+}
+
+function wishCard(w, delay) {
+  const el = document.createElement('div');
+  const ts = new Date(w.created_at || Date.now()).getTime();
+  el.className = 'lantern-card theme-' + w.theme;
+  el.style.animationDelay = delay + 's';
+  if (w.id) el.setAttribute('data-id', w.id);
+  el.innerHTML =
+    '<div class="card-glow"></div>' +
+    '<div class="card-badge">' + (ICONS[w.theme] || '🌙') + ' Eid Wish</div>' +
+    '<p class="card-message">' + safe(w.message) + '</p>' +
+    '<div class="card-footer">' +
+      '<span class="card-name">' + safe(w.name) + '</span>' +
+      '<span class="card-time" data-ts="' + ts + '">' + timeAgo(ts) + '</span>' +
+    '</div>';
+  return el;
+}
+
+async function loadWishes() {
+  const { data, error } = await sb
+    .from('wishes')
+    .select('id,name,message,theme,created_at')
+    .eq('host_id', HOST_ID)
+    .order('created_at', { ascending: false })
+    .limit(60);
+  const grid = document.getElementById('wishes-grid');
+  document.getElementById('wishes-loader')?.remove();
+  if (error) {
+    grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,.35);padding:40px">Could not load wishes. Refresh page.</p>';
+    return;
+  }
+  if (!data.length) {
+    grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;color:rgba(255,255,255,.35);padding:40px">No wishes yet — be the first! 🌙</p>';
+    updateWC(0);
+    return;
+  }
+  data.forEach((w, i) => grid.appendChild(wishCard(w, i * 0.06)));
+  updateWC(data.length);
+}
+
+function updateWC(n) {
+  const el = document.getElementById('wish-count-text');
+  if (el) el.textContent = n + ' wish' + (n !== 1 ? 'es' : '') + ' shared this Eid';
+}
+
+function subscribeWishes() {
+  sb.channel('w-rt-' + HOST_ID)
+    .on('postgres_changes', {
+      event: 'INSERT', schema: 'public', table: 'wishes',
+      filter: 'host_id=eq.' + HOST_ID
+    }, p => {
+      const w = p.new;
+      if (document.querySelector('.lantern-card[data-id="' + w.id + '"]')) return;
+      const grid = document.getElementById('wishes-grid');
+      grid.querySelector('p')?.remove();
+      grid.insertBefore(wishCard(w, 0), grid.firstChild);
+      showToast('🏮 Someone just shared an Eid wish!');
+      updateWC(document.querySelectorAll('.lantern-card').length);
+    })
+    .subscribe();
+}
+
+async function handleWishSubmit() {
+  const name = document.getElementById('w-name').value.trim();
+  const msg  = document.getElementById('w-msg').value.trim();
+  const btn  = document.getElementById('w-btn');
+  if (!name)           return setErr('w-error', 'Please enter your name.');
+  if (name.length < 2) return setErr('w-error', 'Name must be at least 2 characters.');
+  if (!msg)            return setErr('w-error', 'Please write your Eid wish.');
+  if (msg.length < 5)  return setErr('w-error', 'Message too short — share a real wish! 🌙');
+  const RL = 'eid_wish_' + HOST_ID, W = 300000;
+  const lt = localStorage.getItem(RL);
+  if (lt && Date.now() - Number(lt) < W) {
+    const r = Math.ceil((W - (Date.now() - Number(lt))) / 60000);
+    return setErr('w-error', 'Please wait ' + r + ' more minute' + (r > 1 ? 's' : '') + '.');
+  }
+  btn.disabled = true;
+  btn.textContent = '⏳ Sending…';
+  setErr('w-error', '');
+  const theme = THEMES[Math.floor(Math.random() * THEMES.length)];
+  const { data, error } = await sb
+    .from('wishes')
+    .insert([{ name, message: msg, theme, host_id: HOST_ID }])
+    .select().single();
+  if (error) {
+    setErr('w-error', 'Something went wrong. Try again.');
+    btn.disabled = false;
+    btn.textContent = '🌙 Share Eid Wish';
+    return;
+  }
+  const grid = document.getElementById('wishes-grid');
+  grid.querySelector('p')?.remove();
+  grid.insertBefore(wishCard(data, 0), grid.firstChild);
+  boom();
+  showToast('🌙 Your Eid wish has been shared!');
+  localStorage.setItem(RL, Date.now().toString());
+  updateWC(document.querySelectorAll('.lantern-card').length);
+  document.getElementById('w-name').value = '';
+  document.getElementById('w-msg').value  = '';
+  document.getElementById('w-char').textContent = '0 / 280';
+  btn.disabled    = false;
+  btn.textContent = '🌙 Share Eid Wish';
+}
+
+function getTier(amt) {
+  if (amt >= 500) return { l: '🥇 Gold',   c: 'tier-badge-gold'   };
+  if (amt >= 200) return { l: '🥈 Silver', c: 'tier-badge-silver' };
+  if (amt >= 50)  return { l: '🥉 Bronze', c: 'tier-badge-bronze' };
+  return null;
+}
+
+async function loadLeaderboard() {
+  const { data, error } = await sb
+    .from('salamis')
+    .select('id,name,amount,method,created_at')
+    .eq('host_id', HOST_ID)
+    .order('amount', { ascending: false })
+    .limit(25);
+  const board = document.getElementById('leaderboard');
+  if (error) {
+    board.innerHTML = '<p style="text-align:center;color:rgba(255,255,255,.35);padding:40px">Could not load. Refresh.</p>';
+    return;
+  }
+  if (!data || !data.length) {
+    board.innerHTML = '<p style="text-align:center;color:rgba(255,255,255,.35);padding:40px">No salami yet — send the first! 💰</p>';
+    return;
+  }
+  board.innerHTML = '';
+  data.forEach((e, i) => {
+    const t2  = getTier(e.amount);
+    const ts  = new Date(e.created_at).getTime();
+    const row = document.createElement('div');
+    row.className = 'leader-row';
+    row.style.animationDelay = (i * 0.05) + 's';
+    row.innerHTML =
+      '<div class="leader-rank ' + (i < 3 ? 'rank-' + (i + 1) : '') + '">' + (i + 1) + '</div>' +
+      '<div class="leader-avatar">' + safe(e.name.charAt(0).toUpperCase()) + '</div>' +
+      '<div class="leader-info">' +
+        '<div class="leader-name">' + safe(e.name) + '</div>' +
+        '<div class="leader-meta">via ' + safe(e.method) + ' · ' + timeAgo(ts) + '</div>' +
+      '</div>' +
+      '<div class="leader-right">' +
+        '<div class="leader-amount">৳ ' + e.amount.toLocaleString() + '</div>' +
+        (t2 ? '<div class="leader-tier"><span class="tier-badge ' + t2.c + '">' + t2.l + '</span></div>' : '') +
+      '</div>';
+    board.appendChild(row);
+  });
+  const total = data.reduce((s, e) => s + e.amount, 0);
+  document.getElementById('stat-total').textContent = '৳ ' + total.toLocaleString();
+  document.getElementById('stat-avg').textContent   = '৳ ' + Math.round(total / data.length).toLocaleString();
+  document.getElementById('stat-count').textContent = data.length;
+  document.getElementById('salami-total-text').textContent = '৳ ' + total.toLocaleString() + ' salami collected';
+}
+
+function subscribeSalami() {
+  sb.channel('s-rt-' + HOST_ID)
+    .on('postgres_changes', {
+      event: 'INSERT', schema: 'public', table: 'salamis',
+      filter: 'host_id=eq.' + HOST_ID
+    }, async () => {
+      await loadLeaderboard();
+    })
+    .subscribe();
+}
+
+async function handleSalamiSubmit() {
+  const name   = document.getElementById('s-name').value.trim();
+  const amount = parseInt(document.getElementById('s-amount').value, 10);
+  const method = document.getElementById('s-method').value;
+  const btn    = document.getElementById('s-btn');
+  if (!name)                 return setErr('s-error', 'Please enter your name.');
+  if (name.length < 2)       return setErr('s-error', 'Name must be at least 2 characters.');
+  if (!amount || isNaN(amount)) return setErr('s-error', 'Please enter the amount.');
+  if (amount < 10)           return setErr('s-error', 'Minimum salami is ৳10.');
+  if (amount > 50000)        return setErr('s-error', 'Maximum is ৳50,000.');
+  const RL = 'eid_salami_' + HOST_ID, W = 600000;
+  const lt = localStorage.getItem(RL);
+  if (lt && Date.now() - Number(lt) < W) {
+    const r = Math.ceil((W - (Date.now() - Number(lt))) / 60000);
+    return setErr('s-error', 'Please wait ' + r + ' more minute' + (r > 1 ? 's' : '') + '.');
+  }
+  btn.disabled    = true;
+  btn.textContent = '⏳ Confirming…';
+  setErr('s-error', '');
+  const { error } = await sb
+    .from('salamis')
+    .insert([{ name, amount, method, host_id: HOST_ID }]);
+  if (error) {
+    setErr('s-error', 'Something went wrong. Try again.');
+    btn.disabled    = false;
+    btn.textContent = '🎊 Confirm Salami Sent';
+    return;
+  }
+  boom();
+  showToast('🎊 ' + safe(name) + "'s ৳" + amount + ' salami is on the board!');
+  localStorage.setItem(RL, Date.now().toString());
+  document.getElementById('s-name').value   = '';
+  document.getElementById('s-amount').value = '';
+  btn.disabled    = false;
+  btn.textContent = '🎊 Confirm Salami Sent';
+  await loadLeaderboard();
+}
+
+setInterval(() => {
+  document.querySelectorAll('[data-ts]').forEach(el => {
+    el.textContent = timeAgo(Number(el.dataset.ts));
+  });
+}, 60000);
+
+document.addEventListener('DOMContentLoaded', () => {
+  const p = new URLSearchParams(window.location.search);
+  if (p.get('h') && p.get('b') && p.get('n')) {
+    HOST_ID      = p.get('h');
+    BKASH_NUMBER = p.get('b');
+    NAGAD_NUMBER = p.get('n');
+    const pName  = p.get('name');
+    if (pName) {
+      document.querySelector('.eid-tagline').textContent =
+        'Send your Eid wishes & Salami to ' + pName + ' 🌙';
+      document.querySelector('.creator-name').textContent = pName;
+      document.querySelector('.creator-avatar').textContent =
+        pName.charAt(0).toUpperCase();
+      document.title = 'Eid Wishes for ' + pName + ' 🌙';
+    }
+    const shareBox = document.createElement('div');
+    shareBox.style.cssText = 'text-align:center;margin-top:14px';
+    shareBox.innerHTML =
+      '<p style="font-size:.75rem;color:var(--text-faint);margin-bottom:8px">Your wall link — share this!</p>' +
+      '<button onclick="navigator.clipboard.writeText(window.location.href).then(()=>showToast(\'🔗 Link copied!\'))" ' +
+      'style="background:rgba(240,192,64,.1);border:1px solid rgba(240,192,64,.25);color:var(--gold);' +
+      'padding:8px 20px;border-radius:50px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:.82rem">' +
+      '📋 Copy My Wall Link</button>';
+    document.querySelector('.counters-row').after(shareBox);
+  }
+
+  document.getElementById('bkash-num').textContent = BKASH_NUMBER;
+  document.getElementById('nagad-num').textContent = NAGAD_NUMBER;
+
+  initStars();
+  for (let i = 0; i < 10; i++) setTimeout(spawn, i * 1600);
+  setInterval(spawn, 4500);
+
+  document.getElementById('w-msg').addEventListener('input', function () {
+    const n  = this.value.length;
+    const el = document.getElementById('w-char');
+    el.textContent = n + ' / 280';
+    el.classList.toggle('warn', n > 250);
+  });
+
+  document.getElementById('w-name').addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('w-msg').focus();
+  });
+
+  const nav = document.getElementById('sticky-nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('nav-visible', window.scrollY > 320);
+  }, { passive: true });
+
+  loadWishes();
+  subscribeWishes();
+  loadLeaderboard();
+  subscribeSalami();
+});
+</script>
+</body>
+</html>
